@@ -17,60 +17,98 @@ import com.example.demo.model.Producto;
 import com.example.demo.repo.categoriaRepo;
 import com.example.demo.repo.productoRepo;
 
+// Imports de Swagger
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+
 @RestController
 public class CategoriaController {
 
-@Autowired
-categoriaRepo repo;
-@Autowired
-productoRepo repoProducto;
-@GetMapping("categorias")
-  public List<Department> findAllcategoria() {
-    return this.repo.findAll();
-  }
+    @Autowired
+    categoriaRepo repo;
+    @Autowired
+    productoRepo repoProducto;
 
-@PostMapping("categoria")
-  public Department addcategoria(@RequestBody Department categoria) {
-
-    return repo.save(categoria);
-  }
-  @PostMapping("addProductoCategoria/{productId}/{categoriaId}")
-  public Department addcategoria(@PathVariable String productId ,@PathVariable String categoriaId) {
-    Optional<Producto> p = repoProducto.findById(productId);
-    Optional<Department> d = repo.findById(categoriaId);
-    if(d.isPresent())
-    if(p.isPresent()){
-        
-        d.get().getProductos().add(p.get());
+    @Operation(summary = "Listar todas las categorías")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de categorías devuelta exitosamente")
+    })
+    @GetMapping("categorias")
+    public List<Department> findAllcategoria() {
+        return this.repo.findAll();
     }
-    return repo.save(d.get());
 
-  }
-  @GetMapping("categoria/producto/{productId}")
-  public Set<Department>  getDepartmentsByProduct(@PathVariable String productId) {
-    Optional<Producto> p = repoProducto.findById(productId);
-    if(p.isPresent()){
-      return  p.get().getDeparments();
+    @Operation(summary = "Agregar una nueva categoría")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoría guardada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content)
+    })
+    @PostMapping("categoria")
+    public Department addcategoria(@RequestBody Department categoria) {
+        return repo.save(categoria);
     }
-    return null;
 
-  }
+    @Operation(summary = "Asociar un producto a una categoría")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Asociación exitosa"),
+        @ApiResponse(responseCode = "404", description = "Producto o Categoría no encontrados", content = @Content)
+    })
+    @PostMapping("addProductoCategoria/{productId}/{categoriaId}")
+    public Department addcategoria(@PathVariable String productId ,@PathVariable String categoriaId) {
+        Optional<Producto> p = repoProducto.findById(productId);
+        Optional<Department> d = repo.findById(categoriaId);
+        if(d.isPresent())
+            if(p.isPresent()){
+                d.get().getProductos().add(p.get());
+            }
+        return repo.save(d.get());
+    }
 
-@GetMapping("categoria/{id}")
-public Optional<Department> getById(@PathVariable String id) {
-    return repo.findById(id);
-}
+    @Operation(summary = "Obtener categorías por ID de producto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categorías encontradas"),
+        @ApiResponse(responseCode = "404", description = "Producto no encontrado", content = @Content)
+    })
+    @GetMapping("categoria/producto/{productId}")
+    public Set<Department>  getDepartmentsByProduct(@PathVariable String productId) {
+        Optional<Producto> p = repoProducto.findById(productId);
+        if(p.isPresent()){
+            return  p.get().getDeparments();
+        }
+        return null;
+    }
 
+    @Operation(summary = "Obtener una categoría por su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoría encontrada"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada", content = @Content)
+    })
+    @GetMapping("categoria/{id}")
+    public Optional<Department> getById(@PathVariable String id) {
+        return repo.findById(id);
+    }
 
-@PutMapping("categoria/{id}")
-public Department putDepartment(@PathVariable String id, @RequestBody Department categoria) {
-    categoria.setId(id);
-    return repo.save(categoria);
-}
+    @Operation(summary = "Actualizar una categoría")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoría actualizada correctamente"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada", content = @Content)
+    })
+    @PutMapping("categoria/{id}")
+    public Department putDepartment(@PathVariable String id, @RequestBody Department categoria) {
+        categoria.setId(id);
+        return repo.save(categoria);
+    }
 
-@DeleteMapping("categoria/{id}")
-public String deleteDeparment(@PathVariable String id) {
-    repo.deleteById(id);
-    return "{\"success\":true}";
-}
+    @Operation(summary = "Eliminar una categoría")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoría eliminada correctamente"),
+        @ApiResponse(responseCode = "404", description = "Categoría no encontrada", content = @Content)
+    })
+    @DeleteMapping("categoria/{id}")
+    public String deleteDeparment(@PathVariable String id) {
+        repo.deleteById(id);
+        return "{\"success\":true}";
+    }
 }
